@@ -56,7 +56,20 @@ const timeUniformLocation = gl.getUniformLocation(program, 'u_time');
 gl.uniform2f(resolutionUniformLocation, canvas.width, canvas.height);
 
 let time = 0;
+let lastTime = performance.now();  // Время последнего кадра
+let fps = 0;
 function render() {
+  // Рассчитываем время между кадрами
+  const currentTime = performance.now();
+  const deltaTime = currentTime - lastTime;
+  lastTime = currentTime;
+
+  // Рассчитываем FPS
+  fps = 1000 / deltaTime;
+
+  // Обновляем информацию о FPS на экране
+  document.getElementById('fps-display').textContent = `FPS: ${fps.toFixed(2)}`;
+
   time += 0.01;
   gl.uniform1f(timeUniformLocation, time);
 

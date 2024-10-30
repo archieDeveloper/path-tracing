@@ -10,3 +10,11 @@ body {
 canvas {
   border: 1px solid #fff;
 }
+
+.fps-display {
+  position: absolute;
+  color: white;
+  font-size: 20pt;
+  left: 20px;
+  top: 10px;
+}
