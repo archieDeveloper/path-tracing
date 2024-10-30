@@ -2,6 +2,8 @@ precision highp float;
 
 uniform vec2 u_resolution;
 uniform float u_time;
+uniform float u_sampleOffset; // Смещение для каждого прохода
+uniform int u_totalSamples;   // Общее число сэмплов для нормализации
 
 struct Sphere {
   vec3 center;
@@ -74,33 +76,30 @@ vec3 traceRay(vec3 rayOrigin, vec3 rayDir) {
 
 // Функция для генерации псевдослучайного числа
 float random(vec2 st) {
-  return fract(sin(dot(st.xy, vec2(12.9898, 78.233))) * 43758.5453123);
+  return fract(sin(dot(st.xy + vec2(u_sampleOffset), vec2(12.9898, 78.233))) * 43758.5453123);
 }
 
 void main() {
   vec2 uv = (gl_FragCoord.xy / u_resolution) * 2.0 - 1.0;
   uv.x *= u_resolution.x / u_resolution.y;
-  
-  vec3 rayOrigin = vec3(0.0, 0.0, 0.0);
-  
-  // Supersampling
-  const int samples = 4;
-  vec3 color = vec3(0.0);
-  float offset = 0.005; // Сила смещения
-  
-  for (int i = 0; i < samples; i++) {
-    for (int j = 0; j < samples; j++) {
-      // Генерируем случайные смещения для каждого луча
-      vec2 randomOffset = vec2(
-        (float(i) + random(uv + vec2(float(j)))) / float(samples),
-        (float(j) + random(uv + vec2(float(i)))) / float(samples)
-      ) * offset;
-      
-      vec3 rayDir = normalize(vec3(uv + randomOffset, 1.0));
-      color += traceRay(rayOrigin, rayDir);
-    }
-  }
 
-  color /= float(samples * samples); // Усредняем результаты
+  vec3 rayOrigin = vec3(0.0, 0.0, 0.0);
+  vec3 color = vec3(0.0);
+
+  const int maxSamplesPerPass = 64; // Максимальное количество сэмплов за один проход
+  for (int i = 0; i < maxSamplesPerPass; i++) {
+    // Пропускаем лишние сэмплы, если `samplesPerPass` меньше `maxSamplesPerPass`
+    if (i >= u_totalSamples) break;
+
+    vec2 randomOffset = vec2(
+      random(uv + vec2(float(i))) / float(maxSamplesPerPass),
+      random(uv + vec2(float(i * 2))) / float(maxSamplesPerPass)
+    ) * 0.005;
+
+    vec3 rayDir = normalize(vec3(uv + randomOffset, 1.0));
+    color += traceRay(rayOrigin, rayDir);
+  }
+  color /= float(u_totalSamples); // Нормализация цвета
+
   gl_FragColor = vec4(color, 1.0);
 }
