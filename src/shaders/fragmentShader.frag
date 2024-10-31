@@ -99,7 +99,8 @@ void main() {
     vec3 rayDir = normalize(vec3(uv + randomOffset, 1.0));
     color += traceRay(rayOrigin, rayDir);
   }
-  color /= float(u_totalSamples); // Нормализация цвета
+  //color /= float(u_totalSamples); // Нормализация цвета
+  color /= float(maxSamplesPerPass); // Нормализация цвета
 
   gl_FragColor = vec4(color, 1.0);
 }
